@@ -1,5 +1,5 @@
 // GitHub API との通信。トークンはここでしか使わない（フロントには一切渡さない）
-const { SITE_LABEL, REQUESTER_LABEL_PREFIX } = require('./screens');
+const { SITE_LABEL, REQUESTER_LABEL_PREFIX, NEEDS_HUMAN_LABEL } = require('./screens');
 
 const API = 'https://api.github.com';
 const CACHE_MS = 20 * 1000; // 一覧と PR の取得は 20 秒キャッシュ（5人用なので十分）
@@ -66,7 +66,7 @@ function createGitHubClient(config) {
 
   // ラベルが無ければ作る（Issue 作成時に存在しないラベルで失敗しないように）
   const knownLabels = new Set();
-  const LABEL_COLORS = { 'type:style': 'c5def5', 'type:bug': 'd73a4a', [SITE_LABEL]: '0e8a16' };
+  const LABEL_COLORS = { 'type:style': 'c5def5', 'type:bug': 'd73a4a', 'type:feature': '7057ff', [NEEDS_HUMAN_LABEL]: 'e99695', [SITE_LABEL]: '0e8a16' };
   function colorFor(name) {
     if (LABEL_COLORS[name]) return LABEL_COLORS[name];
     if (name.startsWith('screen:')) return 'fbca04';
@@ -87,7 +87,8 @@ function createGitHubClient(config) {
   }
 
   async function createIssue({ title, body, labels }) {
-    await ensureLabels(labels);
+    // Claude が見送るときに付ける needs-human も、無いと gh issue edit が失敗するので先に作っておく
+    await ensureLabels(labels.includes('type:feature') ? [...labels, NEEDS_HUMAN_LABEL] : labels);
     const issue = await request('POST', `${base}/issues`, { title, body, labels });
     invalidate();
     return issue;

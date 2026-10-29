@@ -39,6 +39,13 @@ test('状態: 未着手 / 作業中 / PR作成済み / マージ済み / クロ�
   assert.equal(byNum[1].requester, 'taro');
 });
 
+test('needs-human ラベルで PR が無ければ「見送り」', () => {
+  const declined = issue(7, ['type:feature', 'screen:teacher', 'request-site', 'requester:taro', 'needs-human']);
+  const rows = attachStatus([declined], [], []);
+  assert.equal(rows[0].status.key, 'declined');
+  assert.equal(rows[0].kind, 'feature');
+});
+
 test('同じ Issue に複数 PR があればマージ済みを優先', () => {
   const rows = attachStatus([issue(1)], [
     pull(10, { ref: 'claude/issue-1-a', state: 'closed' }),

@@ -11,7 +11,11 @@ const SCREENS = [
 const KINDS = [
   { key: 'style', label: '見た目' },
   { key: 'bug', label: 'バグ' },
+  { key: 'feature', label: '機能追加' },
 ];
+
+// Claude が「難しい・できない」と判断して見送った Issue に付けるラベル
+const NEEDS_HUMAN_LABEL = 'needs-human';
 
 // 要望サイトから作った Issue に必ず付けるラベル
 const SITE_LABEL = 'request-site';
@@ -24,4 +28,4 @@ function findKind(key) {
   return KINDS.find((k) => k.key === key) || null;
 }
 
-module.exports = { SCREENS, KINDS, SITE_LABEL, REQUESTER_LABEL_PREFIX, findScreen, findKind };
+module.exports = { SCREENS, KINDS, NEEDS_HUMAN_LABEL, SITE_LABEL, REQUESTER_LABEL_PREFIX, findScreen, findKind };

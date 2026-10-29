@@ -1,8 +1,11 @@
 // フォーム入力を Issue のタイトル・本文・ラベルに整形する。末尾に @claude への指示文を付ける
-const { SITE_LABEL, REQUESTER_LABEL_PREFIX, findScreen, findKind } = require('./screens');
+const { SITE_LABEL, REQUESTER_LABEL_PREFIX, NEEDS_HUMAN_LABEL, findScreen, findKind } = require('./screens');
 
 // 見た目の修正で変更を許可するパス（卒研リポジトリ .github/workflows/pr-checks.yml と一致させる）
 const STYLE_ALLOWED_PATHS = ['client/src/styles/**', 'client/src/**/*.css', 'client/src/**/*.jsx'];
+
+// 機能追加で変更を許可するパス。client の src の中だけ（卒研リポジトリ pr-checks.yml の feature-guard と一致させる）
+const FEATURE_ALLOWED_PATHS = ['client/src/**'];
 
 const TITLE_MAX = 40;
 
@@ -51,6 +54,35 @@ function styleInstruction(screen) {
   ].join('\n');
 }
 
+function featureInstruction(screen) {
+  return [
+    '@claude 上記の「機能追加」の要望に対応してください。',
+    '',
+    '**まず実現できるか判断してください**。次のどれかに当てはまる場合は、**コードを変更せず PR も作らず**、理由を Issue にコメントして見送ってください。',
+    '- `server/`・`shared/`・DB のマイグレーション・`package.json`（依存の追加）の変更が必要',
+    '- `docs/04_API・イベント仕様.md` に無い API・Socket イベントが必要',
+    '- 要望が曖昧で、どう作るかを決められない（確認したいことを具体的に書く）',
+    '- 規模が大きい（目安：変更ファイルが 8 個を超える、または追加行が 300 行を超える）',
+    '- 権限・認証・生徒映像の購読制御に関わる',
+    '',
+    '見送るときの手順：',
+    '1. 見送る理由と、人が決めるべきこと（または分割案）を日本語でコメントする',
+    `2. \`gh issue edit <この Issue の番号> --add-label "${NEEDS_HUMAN_LABEL}"\` でラベルを付ける`,
+    '3. 何も変更せずに終了する',
+    '',
+    '**実現できる場合に守ること**',
+    `- 変更してよいのは次の許可パスだけです: ${FEATURE_ALLOWED_PATHS.map((p) => '`' + p + '`').join(', ')}`,
+    '- **許可パス以外は変更しないでください**（server/・shared/・package.json・設定ファイルは触らない）。CI が許可パス外の変更を検出すると失敗します',
+    '- 既存の画面・部品の書き方に合わせ、色は `client/src/styles/broadsheet.css` の CSS 変数から取ってください',
+    '- 可能なら動作を確認するテスト（`client/src/**/*.test.jsx`）を追加してください',
+    '',
+    '**作業の流れ**',
+    '1. 対象画面の実装を読み、既存の構成に合わせた実装方針を決める（上の見送り条件に当てはまらないか確認する）',
+    '2. 実装し、`npm run build` と `npm test` が通ることを確認する',
+    '3. `gh pr create --base main --label "type:feature" --label "screen:' + screen.key + '"` で PR を作成する。タイトルは「機能追加: 〜」の形、本文は日本語で変更内容と確認方法を説明し、先頭に `Closes #<この Issue の番号>` を書く',
+  ].join('\n');
+}
+
 function bugInstruction(screen) {
   return [
     '@claude 上記のバグを修正してください。',
@@ -67,6 +99,12 @@ function bugInstruction(screen) {
     '3. 修正してテストを通す',
     '4. `gh pr create --base main --label "type:bug" --label "screen:' + screen.key + '"` で PR を作成する。タイトルは「修正: 〜」の形、本文は日本語で原因・修正内容・追加したテストを説明し、先頭に `Closes #<この Issue の番号>` を書く',
   ].join('\n');
+}
+
+function instructionFor(kindKey, screen) {
+  if (kindKey === 'bug') return bugInstruction(screen);
+  if (kindKey === 'feature') return featureInstruction(screen);
+  return styleInstruction(screen);
 }
 
 // 入力から Issue の { title, body, labels } を作る。requester はサイトにログインした GitHub ユーザー名
@@ -93,10 +131,10 @@ function buildIssue(input, requester) {
     lines.push('', '### 期待する動作', quote(input.expected));
     lines.push('', '### 実際の動作', quote(input.actual));
   }
-  lines.push('', '---', '', kind.key === 'bug' ? bugInstruction(screen) : styleInstruction(screen));
+  lines.push('', '---', '', instructionFor(kind.key, screen));
 
   const labels = [`type:${kind.key}`, `screen:${screen.key}`, SITE_LABEL, `${REQUESTER_LABEL_PREFIX}${requester}`];
   return { title, body: lines.join('\n'), labels };
 }
 
-module.exports = { validateInput, buildIssue, STYLE_ALLOWED_PATHS };
+module.exports = { validateInput, buildIssue, STYLE_ALLOWED_PATHS, FEATURE_ALLOWED_PATHS };

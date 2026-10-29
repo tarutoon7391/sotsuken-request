@@ -82,12 +82,14 @@ table.requests td.title { max-width: 320px; }
 
 .tag { padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; white-space: nowrap; }
 .tag.kind-style { background: #ddf4ff; color: #0969da; }
+.tag.kind-feature { background: #f1e8ff; color: #8250df; }
 .tag.kind-bug { background: #ffebe9; color: var(--danger); }
 .status { padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; border: 1px solid var(--line); }
 .status-none { color: var(--muted); }
 .status-branch { color: var(--warn); border-color: var(--warn); }
 .status-pr { color: var(--primary); border-color: var(--primary); }
 .status-merged { color: #fff; background: #8250df; border-color: #8250df; }
+.status-declined { color: var(--danger); border-color: var(--danger); }
 .status-closed { color: var(--muted); text-decoration: line-through; }
 
 .footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 24px; }

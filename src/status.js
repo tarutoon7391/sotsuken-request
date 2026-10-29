@@ -6,6 +6,7 @@ const STATUS = {
   pr: { key: 'pr', label: 'PR作成済み' },
   merged: { key: 'merged', label: 'マージ済み' },
   closed: { key: 'closed', label: 'PRクローズ（未マージ）' },
+  declined: { key: 'declined', label: '見送り（要相談）' },
 };
 
 // PR がどの Issue に対応するか。ブランチ名 claude/issue-N-... と本文の Closes #N の両方を見る
@@ -45,6 +46,8 @@ function attachStatus(issues, pulls, branches = []) {
       if (pick.merged_at) status = STATUS.merged;
       else if (pick.state === 'open') status = STATUS.pr;
       else status = STATUS.closed;
+    } else if (issue.labels.some((l) => l.name === 'needs-human')) {
+      status = STATUS.declined;
     } else if (branches.some((b) => b.startsWith(`claude/issue-${issue.number}-`))) {
       status = STATUS.branch;
     }

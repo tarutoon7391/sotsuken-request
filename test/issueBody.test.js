@@ -1,9 +1,10 @@
 // Issue 本文の整形と入力検証のテスト（GitHub 通信なし）
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { validateInput, buildIssue, STYLE_ALLOWED_PATHS } = require('../src/issueBody');
+const { validateInput, buildIssue, STYLE_ALLOWED_PATHS, FEATURE_ALLOWED_PATHS } = require('../src/issueBody');
 
 const styleInput = { kind: 'style', screen: 'teacher', content: 'ボタンが重なる\n2行目' };
+const featureInput = { kind: 'feature', screen: 'teacher', content: '出席一覧に検索欄を付けたい' };
 const bugInput = { kind: 'bug', screen: 'popup-away', content: '退出できない', steps: '1. 押す', expected: '閉じる', actual: '閉じない' };
 
 test('見た目: 内容だけ必須', () => {
@@ -44,6 +45,23 @@ test('バグの Issue: 失敗テスト→修正の指示と3項目', () => {
   assert.match(issue.body, /### 期待する動作\n> 閉じる/);
   assert.match(issue.body, /### 実際の動作\n> 閉じない/);
   assert.match(issue.body, /--label "type:bug"/);
+});
+
+test('機能追加: 内容だけ必須', () => {
+  assert.deepEqual(validateInput(featureInput), []);
+  assert.ok(validateInput({ ...featureInput, content: '' }).length > 0);
+});
+
+test('機能追加の Issue: 見送り条件・needs-human・許可パス・Opus 用ラベル', () => {
+  const issue = buildIssue(featureInput, 'taro');
+  assert.equal(issue.title, '[機能追加] 先生画面: 出席一覧に検索欄を付けたい');
+  assert.deepEqual(issue.labels, ['type:feature', 'screen:teacher', 'request-site', 'requester:taro']);
+  assert.match(issue.body, /まず実現できるか判断してください/);
+  assert.match(issue.body, /PR も作らず/);
+  assert.match(issue.body, /gh issue edit <この Issue の番号> --add-label "needs-human"/);
+  for (const p of FEATURE_ALLOWED_PATHS) assert.ok(issue.body.includes(p), `許可パス ${p} が本文にある`);
+  assert.match(issue.body, /--label "type:feature" --label "screen:teacher"/);
+  assert.doesNotMatch(issue.body, /見た目」の修正要望/);
 });
 
 test('長いタイトルは40文字で省略', () => {

@@ -1,7 +1,7 @@
 # 卒研 修正要望サイト（sotsuken-request）
 
 卒業研究チーム（5人）専用の「修正要望サイト」です。
-メンバーがフォームから「見た目」または「バグ」の修正要望を送ると、卒研リポジトリ（`tarutoon7391/Sotsuken`）に Issue が作られ、Claude Code Action が自動で修正 PR を作ります。その進み具合をサイト上で確認できます。
+メンバーがフォームから「見た目」「バグ」「機能追加」の修正要望を送ると、卒研リポジトリ（`tarutoon7391/Sotsuken`）に Issue が作られ、Claude Code Action が自動で修正 PR を作ります。その進み具合をサイト上で確認できます。
 
 ## 仕組み
 
@@ -11,7 +11,7 @@
                                                                       ▼
                                                             claude-code-action が起動
                                                             → ブランチ claude/issue-N-… に修正を push
-                                                            → gh pr create で PR 作成（ラベル type:style / type:bug）
+                                                            → gh pr create で PR 作成（ラベル type:style / type:bug / type:feature）
                                                                       ▼
                                               要望サイトの一覧が Issue と PR を突き合わせて状態を表示
 ```
@@ -34,7 +34,8 @@
 
 | ラベル | 意味 |
 |---|---|
-| `type:style` / `type:bug` | 種別 |
+| `type:style` / `type:bug` / `type:feature` | 種別 |
+| `needs-human` | 機能追加で Claude が「難しい・できない」と見送った印。PR は作られず、理由が Issue のコメントに書かれる。一覧では「見送り（要相談）」と出る |
 | `screen:student` `screen:teacher` `screen:popup-away` `screen:class` `screen:auth` `screen:other` | 対象画面（生徒画面／先生画面／確認ポップ・一時退出／クラス一覧・詳細／ログイン・登録／その他） |
 | `request-site` | 要望サイトから作った Issue の目印（一覧の抽出に使う） |
 | `requester:<GitHubユーザー名>` | 依頼者（日次制限の集計に使う） |
@@ -100,7 +101,7 @@ railway variables --set "TARGET_REPO=tarutoon7391/Sotsuken" --set "NODE_ENV=prod
 
 ## 開発メモ
 
-- `src/issueBody.js` … Issue 本文と @claude への指示文。許可パス（見た目）や「失敗テストを先に書く」（バグ）の文言はここ
+- `src/issueBody.js` … Issue 本文と @claude への指示文。許可パス（見た目）、「失敗テストを先に書く」（バグ）、機能追加の見送り条件と許可パス（`client/src/**`）の文言はここ
 - `src/status.js` … Issue と PR の突き合わせ。ブランチ名 `claude/issue-N-…` と本文の `Closes #N` で紐付ける
 - `src/github.js` … GitHub API。20 秒キャッシュ
 - 見た目の許可パスを変えるときは、卒研リポジトリ `.github/workflows/pr-checks.yml` の `ALLOWED_PATTERNS` も同じに揃える
