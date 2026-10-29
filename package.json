@@ -1,0 +1,21 @@
+{
+  "name": "sotsuken-request",
+  "version": "1.0.0",
+  "private": true,
+  "description": "卒業研究チーム専用の修正要望サイト。要望を卒研リポジトリの Issue にして Claude Code Action に自動修正させる",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.10"
+  },
+  "dependencies": {
+    "cookie-session": "^2.1.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}

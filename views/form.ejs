@@ -1,0 +1,67 @@
+<%- include('partials/header') %>
+<section class="card">
+  <h1>修正要望を送る</h1>
+  <p class="muted">送信すると <code><%= targetRepo %></code> に Issue が作られ、Claude Code が自動で修正 PR を作ります。進み具合は <a href="/requests">一覧</a> で確認できます。</p>
+
+  <% if (quota.limit > 0) { %>
+    <p class="quota <%= quota.blocked ? 'blocked' : '' %>">
+      本日の残り送信回数: <strong><%= quota.remaining %></strong> / <%= quota.limit %> 件
+      <% if (quota.blocked) { %>（上限に達したため、今日は送信できません）<% } %>
+    </p>
+  <% } %>
+
+  <% if (errors.length) { %>
+    <ul class="errors">
+      <% errors.forEach((e) => { %><li><%= e %></li><% }) %>
+    </ul>
+  <% } %>
+
+  <form method="post" action="/requests" id="request-form" <%= quota.blocked ? 'data-blocked="1"' : '' %>>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <fieldset>
+      <legend>種別 <span class="req">必須</span></legend>
+      <% kinds.forEach((k) => { %>
+        <label class="radio">
+          <input type="radio" name="kind" value="<%= k.key %>" <%= (input.kind || 'style') === k.key ? 'checked' : '' %> required>
+          <%= k.label %>
+        </label>
+      <% }) %>
+    </fieldset>
+
+    <label class="field">
+      <span>対象画面 <span class="req">必須</span></span>
+      <select name="screen" required>
+        <option value="">選択してください</option>
+        <% screens.forEach((s) => { %>
+          <option value="<%= s.key %>" <%= input.screen === s.key ? 'selected' : '' %>><%= s.label %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>要望内容 <span class="req">必須</span></span>
+      <textarea name="content" rows="5" required placeholder="例：先生画面の出席一覧で、名前が長いとボタンと重なってしまう。名前を省略表示にしてほしい"><%= input.content || '' %></textarea>
+    </label>
+
+    <div id="bug-fields" class="bug-fields">
+      <label class="field">
+        <span>再現手順 <span class="req">必須（バグのみ）</span></span>
+        <textarea name="steps" rows="4" placeholder="1. 生徒でログイン&#10;2. 授業に入室&#10;3. 一時退出ボタンを押す"><%= input.steps || '' %></textarea>
+      </label>
+      <label class="field">
+        <span>期待する動作 <span class="req">必須（バグのみ）</span></span>
+        <textarea name="expected" rows="3" placeholder="確認ポップが閉じて退出中画面に移る"><%= input.expected || '' %></textarea>
+      </label>
+      <label class="field">
+        <span>実際の動作 <span class="req">必須（バグのみ）</span></span>
+        <textarea name="actual" rows="3" placeholder="ポップが閉じず、コンソールに TypeError が出る"><%= input.actual || '' %></textarea>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" type="submit" id="submit-btn" <%= quota.blocked ? 'disabled' : '' %>>送信して Issue を作る</button>
+    </div>
+  </form>
+</section>
+<%- include('partials/footer') %>

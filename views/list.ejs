@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+<section class="card">
+  <div class="list-head">
+    <h1>要望一覧</h1>
+    <div class="filters">
+      <a class="chip <%= mine ? '' : 'on' %>" href="/requests">全員</a>
+      <a class="chip <%= mine ? 'on' : '' %>" href="/requests?filter=mine">自分の分</a>
+    </div>
+  </div>
+
+  <% if (created) { %>
+    <p class="notice">要望を送信しました。Issue #<%= created %> を作成し、Claude Code が対応を始めます（数分かかります）。</p>
+  <% } %>
+
+  <% if (!rows.length) { %>
+    <p class="muted">まだ要望はありません。</p>
+  <% } else { %>
+    <table class="requests">
+      <thead>
+        <tr><th>Issue</th><th>種別</th><th>画面</th><th>内容</th><th>依頼者</th><th>送信日時</th><th>状態</th><th>PR</th></tr>
+      </thead>
+      <tbody>
+        <% rows.forEach((r) => {
+          const kind = kinds.find((k) => k.key === r.kind);
+          const screen = screens.find((s) => s.key === r.screen);
+          const d = new Date(r.createdAt);
+          const when = d.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        %>
+          <tr class="<%= r.number === created ? 'new' : '' %>">
+            <td><a href="<%= r.url %>" target="_blank" rel="noopener">#<%= r.number %></a></td>
+            <td><span class="tag kind-<%= r.kind %>"><%= kind ? kind.label : r.kind %></span></td>
+            <td><%= screen ? screen.label : r.screen %></td>
+            <td class="title"><%= r.title.replace(/^\[[^\]]+\]\s*[^:]+:\s*/, '') %></td>
+            <td>@<%= r.requester %></td>
+            <td class="nowrap"><%= when %></td>
+            <td><span class="status status-<%= r.status.key %>"><%= r.status.label %></span></td>
+            <td>
+              <% if (r.pr) { %>
+                <a href="<%= r.pr.url %>" target="_blank" rel="noopener">PR #<%= r.pr.number %></a>
+              <% } else { %>
+                <span class="muted">—</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <p class="muted small">状態は約20秒ごとに GitHub から取り直します。ページを再読み込みすると最新になります。</p>
+  <% } %>
+</section>
+<%- include('partials/footer') %>
